@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Boletín Escolar</title>
+        <style>
+            /* Estilos para impresión */
+            @media print {
+                body {
+                    margin: 0;
+                    padding: 0;
+                    -webkit-print-color-adjust: exact; /* Para imprimir colores de fondo */
+                    print-color-adjust: exact;
+                }
+                #root > div {
+                    padding: 0 !important;
+                    margin: 0 !important;
+                    box-shadow: none !important;
+                    border: none !important;
+                    background: none !important;
+                }
+                .print\\:shadow-none {
+                    box-shadow: none !important;
+                }
+                .print\\:border-none {
+                    border: none !important;
+                }
+                .print\\:p-0 {
+                    padding: 0 !important;
+                }
+                /* Ocultar botones y elementos no deseados en la impresión */
+                .no-print {
+                    display: none !important;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div id="root"></div>
+    </body>
+</html>
