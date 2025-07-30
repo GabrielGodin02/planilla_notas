@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import 'jspdf-autotable'; // ¡Importante! Esto extiende el objeto jsPDF
 
 const GradeSheet = () => {
   const [students, setStudents] = useState([]);
@@ -11,7 +12,9 @@ const GradeSheet = () => {
     x1: '', x2: '', x3: ''
   });
   const [editIndex, setEditIndex] = useState(null);
-  const sheetRef = useRef();
+  const sheetRef = useRef(); 
+  const institutionTitlesRef = useRef(); 
+
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -29,7 +32,7 @@ const GradeSheet = () => {
     }
     setFormData({
       name: '', area: '', gradeLevel: '',
-      t1: '', t2: '', t3: '', t4: '',
+      t1: '', t2: '', 't3': '', t4: '',
       e1: '', e2: '', e3: '',
       x1: '', x2: '', x3: ''
     });
@@ -46,26 +49,102 @@ const GradeSheet = () => {
     setStudents(updated);
   };
 
-  const generatePDF = () => {
-    const hiddenElements = document.querySelectorAll('.no-print');
-    hiddenElements.forEach(el => el.style.display = 'none');
-
-    html2canvas(sheetRef.current, { scale: 3 }).then((canvas) => {
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('landscape', 'pt', 'a4');
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-      pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-      pdf.save('grade_sheet.pdf');
-
-      hiddenElements.forEach(el => el.style.display = '');
-    });
-  };
-
   const calculateAverage = (...grades) => {
     const nums = grades.map(Number).filter(n => !isNaN(n));
     const sum = nums.reduce((a, b) => a + b, 0);
     return nums.length ? (sum / nums.length).toFixed(2) : '';
+  };
+
+  const generatePDF = async () => {
+    const pdf = new jsPDF('landscape', 'pt', 'a4'); // 'landscape' para orientación horizontal
+
+    // Asegurarse de que los elementos "no-print" estén ocultos
+    const hiddenElements = document.querySelectorAll('.no-print');
+    hiddenElements.forEach(el => el.style.display = 'none');
+
+    // --- Definir el contenido de la tabla para autoTable ---
+    const head = [
+      [
+        { content: 'Nombre', rowSpan: 2 },
+        { content: 'Área', rowSpan: 2 },
+        { content: 'Grado', rowSpan: 2 },
+        { content: 'Notas de Tareas', colSpan: 5, styles: { fillColor: [229, 243, 255] } }, // bg-blue-100
+        { content: 'Notas de Evaluaciones', colSpan: 4, styles: { fillColor: [255, 255, 224] } }, // bg-yellow-100
+        { content: 'Notas de Exposiciones', colSpan: 4, styles: { fillColor: [224, 255, 224] } }, // bg-green-100
+        { content: 'Nota\nDefinitiva', rowSpan: 2, styles: { fillColor: [224, 224, 224] } } // bg-gray-300
+      ],
+      [
+        'T1', 'T2', 'T3', 'T4', { content: 'Prom.', styles: { fontStyle: 'bold' } },
+        'E1', 'E2', 'E3', { content: 'Prom.', styles: { fontStyle: 'bold' } },
+        'X1', 'X2', 'X3', { content: 'Prom.', styles: { fontStyle: 'bold' } }
+      ]
+    ];
+
+    const body = students.map(s => {
+      const tareaProm = calculateAverage(s.t1, s.t2, s.t3, s.t4);
+      const evalProm = calculateAverage(s.e1, s.e2, s.e3);
+      const expoProm = calculateAverage(s.x1, s.x2, s.x3);
+      const finalProm = calculateAverage(tareaProm, evalProm, expoProm);
+
+      return [
+        s.name, s.area, s.gradeLevel,
+        s.t1, s.t2, s.t3, s.t4, { content: tareaProm, styles: { fontStyle: 'bold' } },
+        s.e1, s.e2, s.e3, { content: evalProm, styles: { fontStyle: 'bold' } },
+        s.x1, s.x2, s.x3, { content: expoProm, styles: { fontStyle: 'bold' } },
+        { content: finalProm, styles: { fontStyle: 'bold', textColor: [0, 0, 128] } } // text-blue-700
+      ];
+    });
+
+    // --- Definir una función para añadir los títulos de la institución ---
+    // Estos títulos se dibujarán en posiciones Y fijas en cada página.
+    const addInstitutionHeader = () => {
+      const pageWidth = pdf.internal.pageSize.getWidth();
+      
+      const title1Y = 40; // Posición Y del primer título
+      const title2Y = 60; // Posición Y del segundo título
+
+      pdf.setFontSize(16);
+      pdf.setTextColor(25, 0, 100); // Azul oscuro
+      pdf.text("INSTITUCIÓN EDUCATIVA RURAL", pageWidth / 2, title1Y, { align: 'center' });
+
+      pdf.setFontSize(14);
+      pdf.setTextColor(50, 0, 150); // Azul medio
+      pdf.text("Luis Antonio Robles", pageWidth / 2, title2Y, { align: 'center' });
+    };
+
+    // --- Generar la tabla con autoTable ---
+    pdf.autoTable({
+      head: head,
+      body: body,
+      // startY: se puede dejar o se puede omitir si margin.top es suficiente.
+      // margin.top es crucial: fuerza a la tabla a iniciar D.E.S.P.U.É.S de esta coordenada Y.
+      margin: { top: 90, left: 40, right: 40, bottom: 40 }, // 90pt es suficiente para los títulos (40 y 60) + espacio
+      theme: 'grid', 
+      styles: {
+        fontSize: 8,
+        cellPadding: 4,
+        halign: 'center',
+        valign: 'middle'
+      },
+      headStyles: {
+        fillColor: [200, 200, 200], 
+        textColor: [0, 0, 0],
+        fontStyle: 'bold'
+      },
+      bodyStyles: {
+        textColor: [0, 0, 0]
+      },
+      // Callback para añadir los títulos en cada página
+      didDrawPage: (data) => {
+        addInstitutionHeader(); // Llama a la función de encabezado de institución.
+                                // Ya no necesita 'data' para posicionarse, usa posiciones fijas.
+      }
+    });
+
+    pdf.save('grade_sheet.pdf');
+
+    // Restaurar la visibilidad de los elementos "no-print"
+    hiddenElements.forEach(el => el.style.display = '');
   };
 
   return (
@@ -83,13 +162,14 @@ const GradeSheet = () => {
         </button>
       </form>
 
-      {/* Vista previa */}
+      {/* Vista previa (esta parte es solo para mostrar en el navegador) */}
       <div
         ref={sheetRef}
         className="bg-white border mt-6 overflow-auto rounded shadow-md"
         style={{ padding: '40px 20px 60px 20px' }}
       >
-        <div className="mb-6 text-center">
+        {/* Los títulos de la institución los manejaremos por separado si no se van a capturar con html2canvas para el PDF */}
+        <div ref={institutionTitlesRef} className="mb-6 text-center">
           <h1 className="text-2xl font-bold text-blue-800">INSTITUCIÓN EDUCATIVA RURAL</h1>
           <h2 className="text-xl font-semibold text-blue-600">Luis Antonio Robles</h2>
         </div>
@@ -163,4 +243,3 @@ const GradeSheet = () => {
 };
 
 export default GradeSheet;
-
