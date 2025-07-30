@@ -100,16 +100,16 @@ const GradeSheet = () => {
               <th rowSpan="2" className="border bg-gray-200 align-middle py-2">Nombre</th>
               <th rowSpan="2" className="border bg-gray-200 align-middle py-2">Área</th>
               <th rowSpan="2" className="border bg-gray-200 align-middle py-2">Grado</th>
-              <th colSpan="5" className="border bg-blue-100 py-1">Notas de Tareas</th>
-              <th colSpan="4" className="border bg-yellow-100 py-1">Notas de Evaluaciones</th>
-              <th colSpan="4" className="border bg-green-100 py-1">Notas de Exposiciones</th>
+              <th colSpan="5" className="border bg-blue-100 py-2">Notas de Tareas</th>
+              <th colSpan="4" className="border bg-yellow-100 py-2">Notas de Evaluaciones</th>
+              <th colSpan="4" className="border bg-green-100 py-2">Notas de Exposiciones</th>
               <th rowSpan="2" className="border bg-gray-300 align-middle py-2">Nota<br />Definitiva</th>
               <th rowSpan="2" className="border bg-red-100 align-middle py-2 no-print">Acciones</th>
             </tr>
             <tr>
-              <th className="border">T1</th><th className="border">T2</th><th className="border">T3</th><th className="border">T4</th><th className="border">Prom.</th>
-              <th className="border">E1</th><th className="border">E2</th><th className="border">E3</th><th className="border">Prom.</th>
-              <th className="border">X1</th><th className="border">X2</th><th className="border">X3</th><th className="border">Prom.</th>
+              <th className="border py-3">T1</th><th className="border py-3">T2</th><th className="border py-3">T3</th><th className="border py-3">T4</th><th className="border py-3">Prom.</th>
+              <th className="border py-3">E1</th><th className="border py-3">E2</th><th className="border py-3">E3</th><th className="border py-3">Prom.</th>
+              <th className="border py-3">X1</th><th className="border py-3">X2</th><th className="border py-3">X3</th><th className="border py-3">Prom.</th>
             </tr>
           </thead>
           <tbody>
@@ -120,7 +120,7 @@ const GradeSheet = () => {
               const finalProm = calculateAverage(tareaProm, evalProm, expoProm);
               return (
                 <tr key={i} className="hover:bg-gray-100">
-                  <td className="border py-1">{s.name}</td>
+                  <td className="border py-3">{s.name}</td>
                   <td className="border py-1">{s.area}</td>
                   <td className="border py-1">{s.gradeLevel}</td>
                   <td className="border py-1">{s.t1}</td>
